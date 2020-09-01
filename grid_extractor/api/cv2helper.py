@@ -1,12 +1,18 @@
 import numpy as np
-from typing import Union, List, Callable
+from typing import Union, List, Callable, Tuple
 import ctypes
 import cv2
 
 
 def show_img(img_list: Union[np.ndarray, List[np.ndarray]], combine_fun: Callable = np.vstack,
-             window_name='demo', window_size=(ctypes.windll.user32.GetSystemMetrics(0) // 2, ctypes.windll.user32.GetSystemMetrics(1) // 2),
+             window_name='demo', window_size: Tuple[int, int] = None,
              delay_time=0, note: Union[str, List[str]] = None, **options):
+
+    if window_size is None:
+        if window_size is None:
+            window_size = (ctypes.windll.user32.GetSystemMetrics(0) // 2, ctypes.windll.user32.GetSystemMetrics(1) // 2) if hasattr(ctypes, 'windll') \
+                else (400, 600)
+
     if isinstance(img_list, np.ndarray):
         img_list = [img_list]
 
