@@ -3,4 +3,7 @@
 opencv-python
 numpy
 
-console_color
+# console_color
+
+# If you want to use OCR, please install `pytesseract` and download `tesseract`
+# pytesseract

@@ -2,7 +2,6 @@ import unittest
 from pathlib import Path
 import cv2
 import numpy as np
-from console_color import *  # pip install console_color
 from types import ModuleType
 import inspect
 
@@ -10,7 +9,10 @@ if 'env path':
     import sys
 
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-    from grid_extractor.core import ShadowClearMixin, GridExtractorBase, show_img
+    from grid_extractor.core import (
+        ShadowClearMixin, GridExtractorBase, OCRMixin,
+        show_img
+    )
 
     sys.path.remove(sys.path[0])
 
@@ -20,7 +22,7 @@ class GB18030Tests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        class GB18030Factory(GridExtractorBase, ShadowClearMixin):
+        class GB18030Factory(GridExtractorBase, ShadowClearMixin, OCRMixin):
             ...
 
         self.obj = GB18030Factory(Path('image/GB18030/no_watermark.jpg'))
@@ -52,18 +54,29 @@ class GB18030Tests(unittest.TestCase):
             dict_morph_open=dict(on=True, kernel=cv2.getStructuringElement(cv2.MORPH_RECT, (10, 4))),
             debug=True
         ):
-            if 75 < area < 1200 and w<30 and h>15:
+            if 75 < area < 1200 and w < 30 and h > 15:
                 # cv2.rectangle(img_bgr_copy_1, (x, y), (x + w, y + h), (0, 255, 0), thickness=2)
                 # cv2.drawContours(img_bgr_copy_2, [np.int0(box)], -1, color=(255, 0, 0), thickness=2)
 
-                img_char = self.obj.img_bgr[y-2:y + h, x-2:x+w]
-                img_id = self.obj.img_bgr[y+h+7: y+h+20, x-8:x + w+7]
+                img_char = self.obj.img_bgr[y - 2:y + h, x - 2:x + w]
+                img_id = self.obj.img_bgr[y + h + 7: y + h + 20, x - 8:x + w + 7]
+                """
+                img_id_gray = cv2.cvtColor(img_id, cv2.COLOR_BGR2GRAY)
+                img_id_gray = cv2.threshold(img_id_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+                img_id_gray[np.where(np.count_nonzero(img_id_gray, axis=1) == 0)[0]] = 255  # let the black line (which is all black of each column) to the white color.
+                self.obj.ocr_predict(img_id_gray, '--psm=6')
+                """
                 img_temp_combine = np.ones((img_char.shape[0] + img_id.shape[0],
                                             max(img_char.shape[1], img_id.shape[1]), self.obj.channel),
                                            dtype=np.uint8) * 128
 
                 img_temp_combine[:img_char.shape[0], :img_char.shape[1]] = img_char
                 img_temp_combine[img_char.shape[0]:img_char.shape[0] + img_id.shape[0], :img_id.shape[1]] = img_id
+                # cv2.imwrite('', img)
+                id_string = self.obj.ocr_predict(cv2.resize(img_id, None, fx=5, fy=5, interpolation=cv2.INTER_CUBIC),
+                                                 # --oem 0
+                                                 '--psm 6 -c tessedit_char_whitelist=0123456789ABCDEF -c tessedit_char_blacklist=abcdefghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ')
+                print(id_string.strip())
                 # show_img(img_temp_combine, window_size=(40, 40))
                 cv2.rectangle(self.obj.img_bgr, (x, y), (x + w, y + h), (0, 255, 0), thickness=2)
 
@@ -231,6 +244,8 @@ def run_all_tests_case(module: ModuleType):
         1. run_all_tests_case(sys.modules[__name__])
         2. run_all_tests_case(your_test_module)
     """
+    from console_color import cprint, RGB, create_print, Style  # pip install console_color
+
     cur_module = module
     print(f'working on {cprint(cur_module.__file__, RGB.GREEN, pf=False)}')
     bp = create_print(fore=RGB.BLUE, bg=RGB.YELLOW, style=Style.ITALIC, pf=False)

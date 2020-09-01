@@ -1,7 +1,11 @@
 import cv2
 import numpy as np
 from .api.cv2helper import show_img
-from typing import Callable, Generator, Iterator, Tuple
+from typing import (
+    Callable, Generator,
+    Iterator, Tuple, Union, Dict
+)
+import sys
 from pathlib import Path
 import functools
 
@@ -71,7 +75,7 @@ class GridExtractorBase:
             print(f'A total of {lines_p.shape[0]} line segments found.')
             for line in lines_p:
                 for x1, y1, x2, y2 in line:
-                    yield (x1, y1), (x2, y2)   # cv2.line(img, pt1, pt2, (255, 255, 255), 2)
+                    yield (x1, y1), (x2, y2)  # cv2.line(img, pt1, pt2, (255, 255, 255), 2)
 
     def get_contours(self, **options) -> Iterator[Tuple[
         Tuple[int, int, int, int],
@@ -148,3 +152,30 @@ class ShadowClearMixin:
         img_combine_norm = cv2.merge(result_norm)
         show_img([img_combine, img_combine_norm], note=['combine', 'combine norm'])
         return img_combine, img_combine_norm
+
+
+class OCRMixin:
+    __slots__ = ()
+
+    LANG = 'eng'
+
+    def ocr_predict(self, img_data: np.ndarray, lang=None, detail=False, **options) -> Union[str, Dict]:
+        """
+        :param img_data:
+        :param lang:
+        :param detail: If you want to get confidence or others, set it to True.
+        :param options:
+            - config: --psm 6 -c tessedit_char_whitelist=0123456789ABCDEF -c tessedit_char_blacklist=abcdefghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ
+        :return:
+        """
+        from pytesseract import Output, image_to_string, image_to_data, pytesseract  # version  v5.0.0-alpha.20200328
+
+        lang = lang if lang else self.LANG
+
+        if options.get('debug'):
+            if not pytesseract.tesseract_cmd:
+                sys.stderr.write('`pytesseract.pytesseract.tesseract_cmd` not found!')
+
+        if detail:
+            return image_to_data(img_data, lang=lang, config=options.get('config', ''), output_type=Output.DICT)  # type: Dict  # d['text'][-1] d['conf'][-1]
+        return image_to_string(img_data, lang=lang, config=options.get('config', ''), output_type=Output.STRING)  # type: str
