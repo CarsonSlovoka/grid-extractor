@@ -57,7 +57,7 @@ setup(
     version=VERSION_NUMBER,  # x.x.x.{dev, a, b, rc}
 
     packages=find_packages(exclude=['*.test_cases']),
-    package_data={},  # {f'{PACKAGES_DIR}.demo': ['xxx.ipynb']}
+    package_data={f'{PACKAGES_DIR}.test': ['image/GB18030/*', 'image/GeneralStandardChineseCharacter/*', 'image/JIS/*.*']},
     include_package_data=True,
     license="BSD 3-Clause",
 
