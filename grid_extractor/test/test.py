@@ -9,6 +9,7 @@ if 'env path':
     import sys
 
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    from grid_extractor import __version__
     from grid_extractor.core import (
         ShadowClearMixin, GridExtractorBase, OCRMixin,
         show_img
@@ -233,6 +234,25 @@ class GSCCTests(unittest.TestCase):
         print(min(h_list), max(h_list))
         print(min(area_list), max(area_list))
         show_img(self.obj.img_bgr)
+
+
+class CLITests(unittest.TestCase):
+
+    def test_show_version(self):
+        print(__version__)
+        self.assertTrue(len(__version__) > 0)
+
+
+def test_setup():
+    # suite_list = [unittest.TestLoader().loadTestsFromTestCase(class_module) for class_module in (CLITests, )]
+    # suite_class_set = unittest.TestSuite(suite_list)
+
+    suite_function_set = unittest.TestSuite()
+    suite_function_set.addTest(CLITests('test_show_version'))
+
+    suite = suite_function_set  # pick one of two: suite_class_set, suite_function_set
+    # unittest.TextTestRunner(verbosity=1).run(suite)  # self.verbosity = 0  # 0, 1, 2.  unittest.TextTestResult
+    return suite
 
 
 def run_all_tests_case(module: ModuleType):
