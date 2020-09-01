@@ -1,0 +1,9 @@
+# pip install -r requirements.txt
+
+opencv-python
+numpy
+
+# console_color
+
+# If you want to use OCR, please install `pytesseract` and download `tesseract`
+# pytesseract

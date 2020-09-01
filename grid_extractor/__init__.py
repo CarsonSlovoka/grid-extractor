@@ -1,0 +1,4 @@
+__all__ = ()
+__version__ = '0.0.0'
+__author__ = ['Carson', ]
+__description__ = "It's a library to help you take out the text from the grid"
