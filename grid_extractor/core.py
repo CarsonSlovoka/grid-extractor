@@ -13,10 +13,14 @@ import functools
 class GridExtractorBase:
     __slots__ = ('img_bgr',)
 
-    def __init__(self, img_path: Path):
-        if not img_path.exists():
-            raise FileNotFoundError(img_path.absolute())
-        self.img_bgr = cv2.imread(str(img_path))
+    def __init__(self, img_path: Union[Path, np.ndarray] = None):
+        if img_path:
+            if isinstance(img_path, Path):
+                if not img_path.exists():
+                    raise FileNotFoundError(img_path.absolute())
+                self.img_bgr = cv2.imread(str(img_path))
+            if isinstance(img_path, np.ndarray):
+                self.img_bgr = img_path
 
     @property
     def channel(self):
@@ -77,13 +81,14 @@ class GridExtractorBase:
                 for x1, y1, x2, y2 in line:
                     yield (x1, y1), (x2, y2)  # cv2.line(img, pt1, pt2, (255, 255, 255), 2)
 
-    def get_contours(self, **options) -> Iterator[Tuple[
+    def get_contours(self, is_simple=False, **options) -> Iterator[Tuple[
         Tuple[int, int, int, int],
         float,
         np.ndarray,
         np.ndarray
     ]]:
         """
+        :param is_simple: is cv2.CHAIN_APPROX_SIMPLE or not
         :param options:
             threshold_fun = lambda img_gray: cv2.threshold(img_gray, 127, 255, cv2.THRESH_BINARY)  # np.where(img_gray > 127, 255, 0)  # bit
             dict_morph_open=dict(kernel=cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5)))
@@ -98,22 +103,21 @@ class GridExtractorBase:
                                         kernel=dict_morph_open.get('kernel', cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5)))
                                         )  # make the border is more clear
 
-        img_gray = 255 - img_gray
-
         threshold_val, img_thresh = functools.wraps(cv2.threshold)(options['threshold_fun'])(img_gray) if options.get('threshold_fun') else \
-            cv2.threshold(img_gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)  # grayscale
+            cv2.threshold(img_gray, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)  # grayscale
 
         if options.get('debug'):
             show_img([img_thresh], note=['img_thresh'])
 
-        contours, hierarchy = cv2.findContours(img_thresh, cv2.RETR_LIST, cv2.RETR_CCOMP)
+        contours, hierarchy = cv2.findContours(img_thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) if is_simple else \
+            cv2.findContours(img_thresh, cv2.RETR_LIST, cv2.RETR_CCOMP)
         for i, c in enumerate(contours):
             x, y, w, h = cv2.boundingRect(c)
             area: float = cv2.contourArea(c)
             # ratio_w_h = w / h
             rect: np.ndarray = cv2.minAreaRect(c)
             box: np.ndarray = cv2.boxPoints(rect)
-            yield (x, y, w, h), area, rect, box
+            yield (x, y, w, h), area, rect, box  # cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 0), thickness=1)
 
 
 class ShadowClearMixin:
