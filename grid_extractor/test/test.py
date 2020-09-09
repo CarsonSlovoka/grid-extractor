@@ -76,7 +76,7 @@ class GB18030Tests(unittest.TestCase):
                 # cv2.imwrite('', img)
                 id_string = self.obj.ocr_predict(cv2.resize(img_id, None, fx=5, fy=5, interpolation=cv2.INTER_CUBIC),
                                                  # --oem 0
-                                                 '--psm 6 -c tessedit_char_whitelist=0123456789ABCDEF -c tessedit_char_blacklist=abcdefghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ')
+                                                 config='--psm 6 -c tessedit_char_whitelist=0123456789ABCDEF -c tessedit_char_blacklist=abcdefghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ')
                 print(id_string.strip())
                 # show_img(img_temp_combine, window_size=(40, 40))
                 cv2.rectangle(self.obj.img_bgr, (x, y), (x + w, y + h), (0, 255, 0), thickness=2)
