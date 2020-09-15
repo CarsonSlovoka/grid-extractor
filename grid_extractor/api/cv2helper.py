@@ -5,24 +5,22 @@ import cv2
 
 
 def show_img(img_list: Union[np.ndarray, List[np.ndarray]], combine_fun: Callable = np.vstack,
-             window_name='demo', window_size: Tuple[int, int] = None,
+             window_name='demo', window_size: Union[int, Tuple[int, int]] = None,
              delay_time=0, note: Union[str, List[str]] = None, **options):
-
-    if window_size is None:
-        if window_size is None:
-            window_size = (ctypes.windll.user32.GetSystemMetrics(0) // 2, ctypes.windll.user32.GetSystemMetrics(1) // 2) if hasattr(ctypes, 'windll') \
-                else (400, 600)
 
     if isinstance(img_list, np.ndarray):
         img_list = [img_list]
 
-    if isinstance(note, str):
-        print(note)
-
-    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-    if window_size:
+    if window_size != -1:
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+        if window_size is None:
+            window_size = (ctypes.windll.user32.GetSystemMetrics(0) // 2, ctypes.windll.user32.GetSystemMetrics(1) // 2) if hasattr(ctypes, 'windll') \
+                else (400, 600)
         w, h = window_size
         cv2.resizeWindow(window_name, w, h)
+
+    if isinstance(note, str):
+        print(note)
 
     result_list = []
     for idx, img in enumerate(img_list):

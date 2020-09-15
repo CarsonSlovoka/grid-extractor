@@ -14,7 +14,8 @@ class GridExtractorBase:
     __slots__ = ('img_bgr',)
 
     def __init__(self, img_path: Union[Path, np.ndarray] = None):
-        if img_path:
+        self.img_bgr = None
+        if img_path is not None:
             if isinstance(img_path, Path):
                 if not img_path.exists():
                     raise FileNotFoundError(img_path.absolute())
